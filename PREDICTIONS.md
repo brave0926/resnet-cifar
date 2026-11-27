@@ -1,5 +1,7 @@
 # Predictions (written before training, 2026-11-26)
 
+> Note: written on 2026-11-27, before the official plain vs. ResNet runs. The ResNet-20 pilot result (8.18% test error, laptop RTX 3050) was already known; no plain network had been trained yet.
+
 ## 1. Depth 20: plain-20 vs ResNet-20
 - Which will have lower test error? By how much (more or less than 1%p)?
 - Why?

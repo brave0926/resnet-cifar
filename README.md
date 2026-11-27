@@ -20,14 +20,49 @@ Comparing plain and residual networks at depth 20 and 56 under the same training
 
 ## Model check
 
-| Model     | Params  | Layers |
-|-----------|---------|--------|
-| plain-20  | 0.272M  | 20     |
-| ResNet-20 | 0.272M  | 20     |
-| plain-56  | 0.856M  | 56     |
-| ResNet-56 | 0.856M  | 56     |
+| Model     | Params          | Layers |
+|-----------|-----------------|--------|
+| plain-20  | 269,722 (0.27M) | 20     |
+| ResNet-20 | 269,722 (0.27M) | 20     |
+| plain-56  | 853,018 (0.85M) | 56     |
+| ResNet-56 | 853,018 (0.85M) | 56     |
 
 ## Files
-- `data.py`: CIFAR-10 loaders with augmentation
-- `models.py`: `BasicBlock` (plain/residual switch, option A shortcut) and `ResNetCIFAR`
+- `data.py`: CIFAR-10 loaders with augmentation (pad 4, random crop, flip) and normalization
+- `models.py`: `BasicBlock` (plain/residual switch, option A shortcut) and `ResNetCIFAR` (depth 6n+2)
+- `train.py`: trains one model (SGD, lr schedule, AMP) and writes `log.csv`, `config.json`, `model.pt`
+- `plot.py`: draws training/test error curves (`curves.png`) and the final-epoch results table (`results.md`)
+- `predict.py`: loads a trained model and predicts CIFAR-10 test images or your own image
+- `run_all.sh`: runs all four official trainings (plain/ResNet × 20/56) and then `plot.py`
 - `check_models.py`: verifies depth, parameter counts and output shape
+- `overfit_test.py`: sanity check that a model can overfit a tiny batch
+- `show_images.py`: saves a grid of sample CIFAR-10 training images
+- `PREDICTIONS.md`: my predictions, written before the official runs
+
+## How to run
+
+Full run (4 models × 164 epochs, results in `runs/`):
+```bash
+./run_all.sh
+```
+
+Quick check that everything works (1 epoch each, results in `runs_test/`):
+```bash
+EPOCHS=1 OUT=runs_test ./run_all.sh
+```
+
+Single run, e.g. plain-56:
+```bash
+python train.py --depth 56 --plain --epochs 164 --out runs --workers 8
+python plot.py --runs runs
+```
+
+Predictions with a trained model:
+```bash
+# 8 random CIFAR-10 test images -> predictions.png
+python predict.py --model runs/resnet56/model.pt --depth 56
+# your own image -> top-3 classes
+python predict.py --model runs/resnet56/model.pt --depth 56 --image cat.jpg
+# plain network: add --plain
+python predict.py --model runs/plain20/model.pt --depth 20 --plain
+```

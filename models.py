@@ -19,7 +19,7 @@ class BasicBlock(nn.Module):
         self.conv2 = nn.Conv2d(out_ch, out_ch, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(out_ch)
 
-    def shortcut(self, x):                                              # ← NEW
+    def shortcut(self, x):
         # Option A: if the shape changes, make x match WITHOUT adding weights
         if self.stride != 1 or self.in_ch != self.out_ch:
             x = x[:, :, ::2, ::2]                     # keep every 2nd pixel: 32x32 -> 16x16
@@ -34,23 +34,9 @@ class BasicBlock(nn.Module):
         out = self.conv2(out)            # conv 3x3
         out = self.bn2(out)              # BN
         if self.residual:
-            out = out + self.shortcut(x)  # shortcut (reshaped if needed)  ← CHANGED
+            out = out + self.shortcut(x)  # shortcut (reshaped if needed)
         return F.relu(out)               # final ReLU
 
-
-if __name__ == "__main__":
-    x = torch.randn(2, 16, 32, 32)       # 2 fake images, 16 channels, 32x32
-
-    plain = BasicBlock(16, 16, stride=1, residual=False)
-    res = BasicBlock(16, 16, stride=1, residual=True)
-    print("plain block output:", plain(x).shape)
-    print("res block output:  ", res(x).shape)
-
-    count = lambda m: sum(p.numel() for p in m.parameters())
-    print("plain params:", count(plain), "| res params:", count(res))
-
-    down = BasicBlock(16, 32, stride=2, residual=True)
-    print("down block output:", down(x).shape)
 
 class ResNetCIFAR(nn.Module):
     """The full network from paper §4.2. depth = 6n + 2. residual=False → plain network."""
@@ -92,3 +78,18 @@ class ResNetCIFAR(nn.Module):
         out = F.adaptive_avg_pool2d(out, 1)         # [B, 64, 1, 1]  average each 8x8 map
         out = out.flatten(1)                        # [B, 64]
         return self.fc(out)                         # [B, 10]  class scores
+
+
+if __name__ == "__main__":
+    x = torch.randn(2, 16, 32, 32)       # 2 fake images, 16 channels, 32x32
+
+    plain = BasicBlock(16, 16, stride=1, residual=False)
+    res = BasicBlock(16, 16, stride=1, residual=True)
+    print("plain block output:", plain(x).shape)
+    print("res block output:  ", res(x).shape)
+
+    count = lambda m: sum(p.numel() for p in m.parameters())
+    print("plain params:", count(plain), "| res params:", count(res))
+
+    down = BasicBlock(16, 32, stride=2, residual=True)
+    print("down block output:", down(x).shape)
